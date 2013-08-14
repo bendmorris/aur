@@ -1,0 +1,38 @@
+#!/bin/bash
+# usage: aur PACKAGE_URL
+
+set -e
+
+: ${1?"Usage: $0 PACKAGE_URL"}
+
+aur_dir=~/.aur
+
+tarfile=$(basename "$1")
+pkgname=$(echo $tarfile | cut -d '.' -f 1)
+
+echo "URL: $1"
+echo "Tarfile: $tarfile"
+echo "Package name: $pkgname"
+
+mkdir -p $aur_dir
+cd $aur_dir
+
+echo "Downloading package from URL $1..."
+curl -L $1 -o $tarfile
+
+echo "Untarring package $tarfile..."
+tar xzf $tarfile
+
+echo "Building package $pkgname..."
+cd $pkgname
+makepkg
+pkgfile=$(ls *.pkg.tar.xz | head -1)
+
+echo "Installing package $pkgfile..."
+sudo pacman -U $pkgfile
+
+echo "Cleaning up..."
+cd ..
+rm $tarfile
+
+echo "Done!"
